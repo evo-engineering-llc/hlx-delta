@@ -1,9 +1,9 @@
 # HLX Delta
 
+Reduce structured data transmission by 90–99% without losing information.
+
 Part of Evo Engineering LLC  
 https://www.evo.engineering/
-
-Deterministic state delta engine reducing data transmission by 90–99% with exact reconstruction.
 
 ---
 
@@ -19,6 +19,7 @@ Deterministic state delta engine reducing data transmission by 90–99% with exa
 ## 🔥 Example Output
 
 ```
+
 🔥 RESE DELTA ENGINE — LIVE DEMO
 
 Dataset: AEP_hourly.json
@@ -49,6 +50,7 @@ Actual:            92.64%
 Error:             +2.23%
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ```
 
 ---
@@ -57,33 +59,35 @@ Error:             +2.23%
 
 ![Compression Surface](heatmap.png)
 
-Compression efficiency is governed by:
+Compression efficiency depends on:
 
-- Structure / predictability of the system
-- Fraction of state that remains unchanged
+- structure / predictability of the system  
+- fraction of state that remains unchanged  
 
 ---
 
-## 🧠 Behavior
+## 🧠 How It Works
 
-HLX Delta operates as a deterministic state transition system:
+HLX Delta transmits **change instead of full state**:
 
 ```
+
 State A → Delta → Encode → Transmit → Decode → Reconstruct State B
-```
+
+````
 
 Key property:
 
-> Compression is proportional to predictable structure × retained state
+> Compression scales with predictable structure × retained state
 
-The system does not fail in correctness — only in efficiency when structure collapses.
+The system never loses correctness — only efficiency when structure collapses.
 
 ---
 
 ## 🧪 Use Cases
 
 - Telemetry and energy systems  
-- Distributed system state synchronization  
+- Distributed system synchronization  
 - Event streaming pipelines  
 - IoT data transmission  
 - Structured JSON evolution  
@@ -94,22 +98,22 @@ The system does not fail in correctness — only in efficiency when structure co
 
 ```bash
 python demo_rese.py sample_data/sample.json
-```
+````
 
 ---
 
 ## 🔗 Related Systems
 
-- https://github.com/evo-engineering-llc/apex-twist — Field-based computation optimization  
-- https://github.com/evo-engineering-llc/hlx-photo — Deterministic image reconstruction  
+* [https://github.com/evo-engineering-llc/apex-twist](https://github.com/evo-engineering-llc/apex-twist) — Compute reduction via field evaluation
+* [https://github.com/evo-engineering-llc/hlx-photo](https://github.com/evo-engineering-llc/hlx-photo) — Deterministic reconstruction systems
 
 ---
 
 ## ⚠️ Notes
 
-- This repository contains a demonstration layer only  
-- Core engine and optimization layers are not included  
-- Behavior is deterministic and reproducible  
+* This repo contains a demonstration layer only
+* Core engine and optimization layers are not included
+* Behavior is deterministic and reproducible
 
 ---
 
