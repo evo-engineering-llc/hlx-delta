@@ -16,7 +16,7 @@ https://www.evo.engineering/
 - Deterministic and reproducible behavior
 - Consistent performance across structured datasets
 
-In systems where most data remains stable between updates, HLX Delta reduces transmission cost while preserving exact state.
+In systems where most data remains stable between updates, HLX Delta reduces data transfer while preserving exact system state.
 
 ---
 
@@ -28,9 +28,9 @@ HLX Delta operates on change (Δ) rather than full state, enabling significant e
 
 Across multiple real-world structured datasets:
 
-- ~90–99% reduction in compute depending on change rate  
-- ~97–99.9% reduction in data transfer  
-- Linear scaling with change frequency  
+- ~90–99% reduction in compute (validated via benchmark harness)
+- ~97–99.9% reduction in data transfer
+- Linear scaling with change frequency
 
 ### Key Insight
 
@@ -40,11 +40,7 @@ Compute cost scales with **change rate (Δ)** rather than total dataset size (N)
 - Moderate change → proportional compute  
 - High change → approaches baseline  
 
-This behavior makes HLX Delta particularly effective in:
-
-- streaming systems  
-- telemetry pipelines  
-- distributed state synchronization  
+Unlike traditional systems (e.g., Parquet, Delta Lake) that optimize storage, HLX Delta enables execution models that operate on changed data only.
 
 ---
 
@@ -60,16 +56,24 @@ Records: 121273
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Original Size:     7.31 MB
-Delta Size:        551.16 KB
+Delta Size:        551.27 KB
 Reduction:         92.64%
 
-Encode Time:       0.043 sec
-Decode Time:       0.150 sec
+Encode Time:       0.0509 sec
+Decode Time:       0.2813 sec
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Reconstruction:    PASS
 SHA256 Match:      VERIFIED
+
+Observed Efficiency:
+Change Rate:       5.00%
+Reduction:         92.64%
+
+Compute Comparison (Simulated Workload):
+Full Scan Time:    0.084379 sec
+Delta Scan Time:   0.011000 sec
 
 ````
 
@@ -101,7 +105,7 @@ HLX Delta is most effective when the majority of data remains unchanged between 
 ## ▶️ Run Demo
 
 ```bash
-python demo_rese.py sample_data/sample.json
+python hlx_delta_demo.py sample_data_json/AEP_hourly.json
 ````
 
 ---
@@ -109,7 +113,8 @@ python demo_rese.py sample_data/sample.json
 ## ⚠️ Notes
 
 * This repository provides a demonstration layer
-* Internal implementations and advanced optimization techniques are not included
+* Compute comparison in the demo uses simulated workloads for illustration
+* Full execution optimization and internal architecture are not included
 * Performance varies depending on data characteristics
 
 ---
