@@ -4,11 +4,13 @@ import hashlib
 import sys
 import os
 import random
+import copy
 
 # =========================
-# 🔒 IMPORT YOUR PRIVATE ENGINE
+# 🔒 IMPORT PRIVATE ENGINE
 # =========================
 from rese_engine import rese_encode, rese_decode
+
 
 # =========================
 # UTILS
@@ -23,9 +25,6 @@ def normalize(data):
 def sha256(data_bytes):
     return hashlib.sha256(data_bytes).hexdigest()
 
-def size_bytes(data_bytes):
-    return len(data_bytes)
-
 def format_bytes(n):
     for unit in ["B", "KB", "MB", "GB"]:
         if n < 1024:
@@ -33,40 +32,50 @@ def format_bytes(n):
         n /= 1024
     return f"{n:.2f} TB"
 
+
 # =========================
-# SAFE DELTA (VISIBLE)
+# SAFE DELTA (PUBLIC LAYER)
 # =========================
 def compute_delta(base, new):
     changes = []
 
     for i in range(len(new["records"])):
         if base["records"][i] != new["records"][i]:
+            # NOTE:
+            # Full-record replacement used for demo clarity.
+            # Production may use field-level deltas.
             changes.append((i, new["records"][i]))
 
     return changes
 
+
 def apply_delta(base, changes):
-    out = json.loads(json.dumps(base))
+    out = copy.deepcopy(base)
+
     for idx, rec in changes:
         out["records"][idx] = rec
+
     return out
+
 
 def pack(changes):
     return json.dumps(changes, separators=(",", ":")).encode()
 
+
 def unpack(b):
     return json.loads(b.decode())
+
 
 # =========================
 # DEMO
 # =========================
 def run_demo(path):
 
-    print("\n🔥 RESE DELTA ENGINE — LIVE DEMO\n")
+    print("\n🔥 HLX DELTA ENGINE — LIVE DEMO\n")
 
     data = load_json(path)
 
-    # normalize structure
+    # Normalize structure
     if isinstance(data, list):
         data = {"records": data}
 
@@ -82,7 +91,7 @@ def run_demo(path):
     # SIMULATE NEXT STATE
     # -------------------------
     base = data
-    new = json.loads(json.dumps(base))
+    new = copy.deepcopy(base)
 
     num_changes = max(1, int(len(records) * 0.05))
     idxs = random.sample(range(len(records)), num_changes)
@@ -93,11 +102,13 @@ def run_demo(path):
             if isinstance(r[k], (int, float)):
                 r[k] += random.uniform(-5, 5)
 
+    change_rate = num_changes / len(records)
+
     # -------------------------
-    # FULL SIZE
+    # FULL DATA SIZE
     # -------------------------
     full_bytes = normalize(new)
-    full_size = size_bytes(full_bytes)
+    full_size = len(full_bytes)
 
     # -------------------------
     # DELTA
@@ -106,20 +117,26 @@ def run_demo(path):
     packed = pack(changes)
 
     # -------------------------
-    # ENCODE
-    # -------------------------
+    # ENCODE (PRIVATE ENGINE)
+    # =========================
     t0 = time.time()
+
+    # NOTE:
+    # rese_engine uses internal state:
+    # encode stores, decode retrieves
     rese_encode(packed)
-    encoded = rese_decode()
+    decoded = rese_decode()
+
     encode_time = time.time() - t0
 
-    delta_size = size_bytes(encoded)
+    encoded = decoded
+    delta_size = len(encoded)
 
     # -------------------------
     # RECONSTRUCT
     # -------------------------
     t1 = time.time()
-    rebuilt = apply_delta(base, unpack(encoded))
+    rebuilt = apply_delta(base, unpack(decoded))
     decode_time = time.time() - t1
 
     # -------------------------
@@ -131,15 +148,28 @@ def run_demo(path):
     factor = full_size / delta_size if delta_size > 0 else 0
 
     # -------------------------
+    # REALISTIC COMPUTE SIMULATION
+    # -------------------------
+    start_full = time.time()
+    for r in new["records"]:
+        _ = hash(str(r))  # simulate real compute work
+    full_scan_time = time.time() - start_full
+
+    start_delta = time.time()
+    for idx, _ in changes:
+        _ = hash(str(new["records"][idx]))
+    delta_scan_time = time.time() - start_delta
+
+    # -------------------------
     # OUTPUT
     # -------------------------
     print(f"Original Size:     {format_bytes(full_size)}")
     print(f"Delta Size:        {format_bytes(delta_size)}")
     print(f"Reduction:         {reduction:.2f}%")
-    print(f"Data Reduction Factor: {factor:.2f}x\n")
+    print(f"Compression Factor:{factor:.2f}x\n")
 
-    print(f"Encode Time:       {encode_time:.3f} sec")
-    print(f"Decode Time:       {decode_time:.3f} sec\n")
+    print(f"Encode Time:       {encode_time:.4f} sec")
+    print(f"Decode Time:       {decode_time:.4f} sec\n")
 
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
@@ -148,28 +178,33 @@ def run_demo(path):
 
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
-    # -------------------------
-    # MODEL PREDICTION
-    # -------------------------
-    mutation = num_changes / len(records)
-    structure = 1.0
+    print("Observed Efficiency:")
+    print(f"Change Rate:       {change_rate * 100:.2f}%")
+    print(f"Reduction:         {reduction:.2f}%\n")
 
-    predicted = -12.65 + 108.48 * structure * (1 - mutation)
-
-    print("Efficiency Model Prediction:")
-    print(f"Predicted:         {predicted:.2f}%")
-    print(f"Actual:            {reduction:.2f}%")
-    print(f"Error:             {(reduction - predicted):+.2f}%")
+    print("Compute Comparison (Simulated Workload):")
+    print(f"Full Scan Time:    {full_scan_time:.6f} sec")
+    print(f"Delta Scan Time:   {delta_scan_time:.6f} sec")
 
     print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
+
 # =========================
-# ENTRY (terminal + notebook friendly)
+# ENTRY (SAFE FOR CLI + NOTEBOOK)
 # =========================
 if __name__ == "__main__":
 
-    if len(sys.argv) < 2:
-        print("No input provided. Using default sample...\n")
-        run_demo("sample_data_json/AEP_hourly.json")
-    else:
+    DEFAULT_PATH = "sample_data_json/AEP_hourly.json"
+
+    # Notebook detection
+    if "ipykernel" in sys.modules:
+        print("Notebook detected — using default dataset\n")
+        run_demo(DEFAULT_PATH)
+
+    # CLI safe execution
+    elif len(sys.argv) > 1 and not sys.argv[1].startswith("--"):
         run_demo(sys.argv[1])
+
+    else:
+        print("No valid input provided. Using default sample...\n")
+        run_demo(DEFAULT_PATH)
